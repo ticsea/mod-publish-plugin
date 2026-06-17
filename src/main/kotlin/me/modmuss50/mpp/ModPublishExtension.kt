@@ -14,6 +14,8 @@ import me.modmuss50.mpp.platforms.github.GithubOptions
 import me.modmuss50.mpp.platforms.gitlab.Gitlab
 import me.modmuss50.mpp.platforms.modrinth.Modrinth
 import me.modmuss50.mpp.platforms.modrinth.ModrinthOptions
+import me.modmuss50.mpp.platforms.xyebbs.Xyebbs
+import me.modmuss50.mpp.platforms.xyebbs.XyebbsOptions
 import org.gradle.api.Action
 import org.gradle.api.ExtensiblePolymorphicDomainObjectContainer
 import org.gradle.api.NamedDomainObjectProvider
@@ -326,6 +328,41 @@ abstract class ModPublishExtension(val project: Project) : PublishOptions {
         }
 
         return task
+    }
+
+    // xyebbs
+
+    fun xyebbs(@DelegatesTo(value = Xyebbs::class) closure: Closure<*>): NamedDomainObjectProvider<Xyebbs> {
+        return xyebbs {
+            project.configure(it, closure)
+        }
+    }
+
+    fun xyebbs(action: Action<Xyebbs>): NamedDomainObjectProvider<Xyebbs> {
+        return xyebbs("xyebbs", action)
+    }
+
+    fun xyebbs(name: String, @DelegatesTo(value = Xyebbs::class) closure: Closure<*>): NamedDomainObjectProvider<Xyebbs> {
+        return xyebbs(name) {
+            project.configure(it, closure)
+        }
+    }
+
+    fun xyebbs(name: String, action: Action<Xyebbs>): NamedDomainObjectProvider<Xyebbs> {
+        return platforms.maybeRegister(name, action)
+    }
+
+    fun xyebbsOptions(@DelegatesTo(value = XyebbsOptions::class) closure: Closure<*>): Provider<XyebbsOptions> {
+        return xyebbsOptions {
+            project.configure(it, closure)
+        }
+    }
+
+    fun xyebbsOptions(action: Action<XyebbsOptions>): Provider<XyebbsOptions> {
+        return configureOptions(XyebbsOptions::class) {
+            it.from(this)
+            action.execute(it)
+        }
     }
 
     // Misc

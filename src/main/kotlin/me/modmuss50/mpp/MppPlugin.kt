@@ -6,6 +6,7 @@ import me.modmuss50.mpp.platforms.gitea.SelfHostedGitea
 import me.modmuss50.mpp.platforms.github.Github
 import me.modmuss50.mpp.platforms.gitlab.Gitlab
 import me.modmuss50.mpp.platforms.modrinth.Modrinth
+import me.modmuss50.mpp.platforms.xyebbs.Xyebbs
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.reflect.TypeOf
@@ -39,6 +40,9 @@ class MppPlugin : Plugin<Project> {
         }
         extension.platforms.registerFactory(Codeberg::class.java) {
             project.objects.newInstance(Codeberg::class.java, it)
+        }
+        extension.platforms.registerFactory(Xyebbs::class.java) {
+            project.objects.newInstance(Xyebbs::class.java, it)
         }
 
         val publishModsTask =
