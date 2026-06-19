@@ -1,13 +1,12 @@
 package me.modmuss50.mpp.platforms.xyebbs
 
 import me.modmuss50.mpp.*
-import org.gradle.api.Action
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.Input
-import org.gradle.api.tasks.Nested
+import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.Optional
 import org.jetbrains.annotations.ApiStatus
 import java.nio.file.Path
@@ -15,6 +14,7 @@ import javax.inject.Inject
 
 interface XyebbsOptions:
         PlatformOptions,
+        LinkContainer,
         PlatformOptionsInternal<XyebbsOptions> {
 
 
@@ -43,12 +43,8 @@ interface XyebbsOptions:
     val orderNumber: Property<Int>
 
     //todo how i handle this?
-    @get:Input
-    val customLink: ListProperty<XyebbsApi.CustomLinkItem>
-
-    @get:ApiStatus.Internal
-    @get:Inject
-    val objectFactory: ObjectFactory
+    /*@get:Input
+    val customLink: ListProperty<XyebbsApi.CustomLinkItem>*/
 
     fun from(other: XyebbsOptions) {
         super.from(other)
@@ -60,7 +56,8 @@ interface XyebbsOptions:
         minecraftVersions.convention(other.minecraftVersions)
         apiEndpoint.convention(other.apiEndpoint)
         orderNumber.convention(other.orderNumber)
-        customLink.convention(other.customLink)
+//        customLink.convention(other.customLink)
+        fromDependencies(other)
     }
 
     fun from(other: Provider<XyebbsOptions>) {
@@ -88,6 +85,51 @@ interface XyebbsOptions:
             )
         ))*/
     }
+}
+
+interface LinkContainer {
+    @get:Input
+    val downLoadLinks: ListProperty<Link>
+
+    @get:ApiStatus.Internal
+    @get:Inject
+    val objectFactory: ObjectFactory
+
+    fun curseForgeLink(url: String) {
+        addInternal("CF", url, "CurseForge", 0)
+    }
+
+    fun modrinthLink(url: String) {
+        addInternal("MR", url, "Modrinth", 1)
+    }
+
+    fun fromDependencies(other: LinkContainer) {
+        downLoadLinks.convention(other.downLoadLinks)
+    }
+
+    @Internal
+    fun addInternal(type: String, url: String, info: String, orderNum: Int) {
+        downLoadLinks.add(
+            objectFactory.newInstance(Link::class.java).apply {
+                this.type.set(type)
+                this.url.set(url)
+                this.info.set(info)
+                this.orderNum.set(orderNum)
+            }
+        )
+    }
+
+}
+
+interface Link {
+    val type: Property<String>
+    @get:Input
+    @get:Optional
+    val url: Property<String>
+    @get:Input
+    @get:Optional
+    val info: Property<String>
+    val orderNum: Property<Int>
 }
 
 abstract class Xyebbs
@@ -160,14 +202,14 @@ constructor(
                 println("File path: ${file.path}")
                 println("File name: ${file.path.fileName}")
 
-                val storedLinks = customLink.get()
+                val storedLinks = downLoadLinks.get()
 
                 val jsonLinks = storedLinks.map {
                     XyebbsApi.CustomLinkItemJson(
-                        linkType = it.linkType,
-                        url = it.url,
-                        info = it.info,
-                        orderNum = it.orderNum
+                        linkType = it.type.get(),
+                        url = it.url.get(),
+                        info = it.info.get(),
+                        orderNum = it.orderNum.get()
                     )
                 }
 

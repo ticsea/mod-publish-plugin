@@ -1,6 +1,5 @@
 package me.modmuss50.mpp.platforms.xyebbs
 
-import kotlinx.serialization.Contextual
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
@@ -9,8 +8,6 @@ import me.modmuss50.mpp.networking.HttpApi.post
 import me.modmuss50.mpp.networking.HttpException
 import me.modmuss50.mpp.networking.MultipartBodyBuilder
 import me.modmuss50.mpp.networking.RequestContext
-import org.gradle.api.tasks.Input
-import org.gradle.api.tasks.Nested
 import java.net.http.HttpClient
 import java.net.http.HttpRequest
 import java.nio.file.Path
@@ -73,14 +70,6 @@ class XyebbsApi(
         }
     }
 
-    //todo how i handle this? it seem it cannot use kotlin serializer.
-    data class CustomLinkItem(
-        var linkType: String,
-        var url: String,
-        var info: String,
-        var orderNum: Int,
-    ) : java.io.Serializable
-
     @Serializable
     data class CustomLinkItemJson(
         @SerialName("linkType") val linkType: String,
@@ -112,13 +101,11 @@ class XyebbsApi(
             Charsets.UTF_8), headers)
 
         val branchId = createVersionBranch.data?.id
-            ?: throw IllegalStateException("创建版本失败: ${createVersionBranch.msg}")
+            ?: throw Exception("创建版本失败: ${createVersionBranch.msg}")
 
         println("=== Parsing Branch ID ===")
-        println("The ID IS: ${branchId}")
+        println("The ID IS: $branchId")
         println("Create Branch Response: $createVersionBranch")
-
-        if (createVersionBranch.data.id == null) throw Exception("id is null")
 
         return createVersionBranch
     }
@@ -198,7 +185,7 @@ class XyebbsApi(
         val tokenAuth = token.data ?: throw IllegalArgumentException("获取不到token: ${token.data}")
 
         println("=== Parsing TOKEN ===")
-        println("The TOKEN IS: ${tokenAuth}")
+        println("The TOKEN IS: $tokenAuth")
 
         val multipartHeaders = headers.toMutableMap()
         multipartHeaders["Content-Type"] = bodyBuilder.getContentType()
@@ -210,7 +197,7 @@ class XyebbsApi(
             "Content-Type" to bodyBuilder.getContentType()
         )
 
-        println("=== New Header: ${uploadHeaders}")
+        println("=== New Header: $uploadHeaders")
 
         println("===== All Response ====")
         println("Create Token Response: $token")
