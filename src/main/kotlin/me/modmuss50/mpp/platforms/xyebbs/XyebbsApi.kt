@@ -1,5 +1,6 @@
 package me.modmuss50.mpp.platforms.xyebbs
 
+import kotlinx.serialization.Contextual
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
@@ -8,6 +9,8 @@ import me.modmuss50.mpp.networking.HttpApi.post
 import me.modmuss50.mpp.networking.HttpException
 import me.modmuss50.mpp.networking.MultipartBodyBuilder
 import me.modmuss50.mpp.networking.RequestContext
+import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.Nested
 import java.net.http.HttpClient
 import java.net.http.HttpRequest
 import java.nio.file.Path
@@ -49,13 +52,6 @@ class XyebbsApi(
     )
 
     @Serializable
-    data class CreateVersionResponse(
-        val data: CreateVersionData? = null,
-        val code: Int,
-        val msg: String
-    )
-
-    @Serializable
     enum class VersionType {
         @SerialName("alpha")
         ALPHA,
@@ -77,78 +73,20 @@ class XyebbsApi(
         }
     }
 
-    @Serializable
-    enum class EnvironmentType {
-        @SerialName("server")
-        SERVER,
-
-        @SerialName("client")
-        CLIENT,
-    }
-
-    @Serializable
-    data class CreateVersion(
-        @SerialName("label")
-        val label: String,
-
-        @SerialName("type")
-        val type: String,
-
-        @SerialName("channel")
-        val channel: String,
-
-        @SerialName("orderNum")
-        val orderNum: Int,
-
-        @SerialName("notes")
-        val notes: String? = null,  // Markdown 描述
-
-        @SerialName("versions")
-        val versions: List<Int>,
-
-        @SerialName("cores")
-        val cores: List<Int>,
-
-        //todo should i use it?
-        val links: List<CustomLinkItemJson>,
-    )
-
-    // ✅ 用于 Gradle 序列化（实现 java.io.Serializable）
+    //todo how i handle this? it seem it cannot use kotlin serializer.
     data class CustomLinkItem(
-        val linkType: String,
-        val url: String,
-        val info: String,
-        val orderNum: Int,
-    ) : java.io.Serializable  // ← 关键！
+        var linkType: String,
+        var url: String,
+        var info: String,
+        var orderNum: Int,
+    ) : java.io.Serializable
 
-    // ✅ 用于 JSON 序列化（使用 @Serializable）
     @Serializable
     data class CustomLinkItemJson(
         @SerialName("linkType") val linkType: String,
         @SerialName("url") val url: String,
         @SerialName("info") val info: String,
         @SerialName("orderNum") val orderNum: Int,
-    )
-
-    @Serializable
-    data class CreateVersionData(
-        val id: Long,
-        val uuid: String,
-        val resourceId: Long,
-        val label: String,
-        val type: String,
-        val channel: String,
-        val notes: String,
-        val fileUuid: String? = null,
-        val fileName: String? = null,
-        val fileType: String? = null,
-        val orderNum: Int,
-        val downloadCount: Int? = null,
-        val updateDate: String? = null,
-        val createDate: String? = null,
-        val versions: List<Int>,
-        val cores: List<Int>,
-        val links: List<CustomLinkItemJson>,
     )
 
     private val headers: Map<String, String>
@@ -180,10 +118,64 @@ class XyebbsApi(
         println("The ID IS: ${branchId}")
         println("Create Branch Response: $createVersionBranch")
 
-        if (createVersionBranch.data.id == null) throw IllegalStateException("id is null")
+        if (createVersionBranch.data.id == null) throw Exception("id is null")
 
         return createVersionBranch
     }
+
+    @Serializable
+    data class CreateVersion(
+        @SerialName("label")
+        val label: String,
+
+        @SerialName("type")
+        val type: String,
+
+        @SerialName("channel")
+        val channel: String,
+
+        @SerialName("orderNum")
+        val orderNum: Int,
+
+        @SerialName("notes")
+        val notes: String? = null,
+
+        @SerialName("versions")
+        val versions: List<Int>,
+
+        @SerialName("cores")
+        val cores: List<Int>,
+
+        val links: List<CustomLinkItemJson>
+    )
+
+    @Serializable
+    data class CreateVersionResponse(
+        val data: CreateVersionData? = null,
+        val code: Int,
+        val msg: String
+    )
+
+    @Serializable
+    data class CreateVersionData(
+        val id: Long,
+        val uuid: String,
+        val resourceId: Long,
+        val label: String,
+        val type: String,
+        val channel: String,
+        val notes: String,
+        val fileUuid: String? = null,
+        val fileName: String? = null,
+        val fileType: String? = null,
+        val orderNum: Int,
+        val downloadCount: Int? = null,
+        val updateDate: String? = null,
+        val createDate: String? = null,
+        val versions: List<Int>,
+        val cores: List<Int>,
+        val links: List<CustomLinkItemJson>
+    )
 
     fun upload(
         resourceId: String,

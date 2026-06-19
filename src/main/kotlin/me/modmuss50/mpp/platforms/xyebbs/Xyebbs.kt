@@ -1,11 +1,13 @@
 package me.modmuss50.mpp.platforms.xyebbs
 
 import me.modmuss50.mpp.*
+import org.gradle.api.Action
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.Nested
 import org.gradle.api.tasks.Optional
 import org.jetbrains.annotations.ApiStatus
 import java.nio.file.Path
@@ -40,9 +42,9 @@ interface XyebbsOptions:
     @get:Input
     val orderNumber: Property<Int>
 
+    //todo how i handle this?
     @get:Input
     val customLink: ListProperty<XyebbsApi.CustomLinkItem>
-
 
     @get:ApiStatus.Internal
     @get:Inject
@@ -88,52 +90,23 @@ interface XyebbsOptions:
     }
 }
 
-interface CustomLinkItemBuilder {
-    @get:Input
-    val linkType: Property<String>
-
-    @get:Input
-    val url: Property<String>
-
-    @get:Input
-    @get:Optional
-    val info: Property<String>
-
-    @get:Input
-    val orderNum: Property<Int>
-
-    @ApiStatus.Internal
-    fun setInternalDefaults() {
-        orderNum.convention(0)
-    }
-}
-
-
 abstract class Xyebbs
 @Inject
 constructor(
     name: String,
 ): Platform(name),
     XyebbsOptions {
-    /*fun link(action: Action<CustomLinkItemBuilder>) {
-        val builder = objectFactory.newInstance(CustomLinkItemBuilder::class.java)
+    //todo how i handle this?
+    /*fun addLinks(action: Action<XyebbsApi.CustomLinkItem>) {
+        val builder = objectFactory.newInstance(XyebbsApi.CustomLinkItem::class.java)
         action.execute(builder)
 
-        // ✅ 创建 CustomLinkItem 并添加到列表
-        val item = XyebbsApi.CustomLinkItem(
-            linkType = builder.linkType.get(),
-            url = builder.url.get(),
-            info = builder.info.orNull ?: "",
-            orderNum = builder.orderNum.orNull ?: 0,
-        )
-
         println("==== Parsing Link Item ====")
-        println(item)
+        println(builder)
 
-        customLink.add(item)  // ✅ 使用 add() 而不是注释掉的代码
+        customLink.add(builder)
     }*/
 
-    // Fix 2: Mandatory override validateInputs
     override fun validateInputs() {
         super.validateInputs()
         check(xyeKey.isPresent && xyeKey.get().isNotBlank()) { "Xyebbs: apiKey must be configured in local.properties" }
@@ -143,7 +116,6 @@ constructor(
         check(minecraftVersions.get().isNotEmpty()) { "Xyebbs: minecraftVersionIds cannot be empty" }
     }
 
-    // Fix 3: Mandatory override dryRunPublishResult, use dedicated XyebbsPublishResult
     override fun dryRunPublishResult(): PublishResult {
         return XyebbsPublishResult(
             projectId = projectId.get(),
@@ -154,14 +126,12 @@ constructor(
         )
     }
 
-    // Fix 4: Mandatory override printDryRunInfo
     override fun printDryRunInfo(logger: org.gradle.api.logging.Logger) {
         logger.lifecycle("  Xyebbs Project ID: ${projectId.get()}")
         logger.lifecycle("  Env Type: ${environmentType.get()}")
         logger.lifecycle("  MineCraft Version Ids: ${minecraftVersions.get()}")
     }
 
-    // Fix 5: Submit YOUR UploadWorkAction, NOT Modrinth's
     override fun publish(context: PublishContext) {
         context.submit(UploadWorkAction::class) {
             it.from(this)
@@ -190,9 +160,8 @@ constructor(
                 println("File path: ${file.path}")
                 println("File name: ${file.path.fileName}")
 
-                val storedLinks = customLink.get()  // List<CustomLinkItem>
+                val storedLinks = customLink.get()
 
-                // 转换为 JSON 版本
                 val jsonLinks = storedLinks.map {
                     XyebbsApi.CustomLinkItemJson(
                         linkType = it.linkType,
@@ -231,13 +200,12 @@ constructor(
                     }
 
                 val uploadResponse =
-                    Retry.run(10, "Failed to upload files") {
+                    Retry.run(maxRetries.get().plus(7), "Failed to upload files") {
                         api.upload(projectId.get(), response.data?.id, files)
                     }
 
                 println("The response is: $uploadResponse")
 
-                //todo fixme this
                 return XyebbsPublishResult(
                     projectId = projectId.get(),
                     data = uploadResponse.data ?: "null",
