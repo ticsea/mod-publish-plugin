@@ -3,7 +3,17 @@ package me.modmuss50.mpp.platforms.xyebbs
 object XyebbsGameVersion {
     private val byName = mapOf(
         "1.20.1" to 222,
-        "1.21.1" to 224
+        "1.21.1" to 224,
+        "1.21.2" to 282,
+        "1.21.3" to 283,
+        "1.21.4" to 284,
+        "1.21.9" to 613,
+        "1.21.10" to 614,
+        "1.21.11" to 620,
+        "26.1" to 633,
+        "26.1.1" to 634,
+        "26.1.2" to 635,
+
     )
 
     private val byId = byName.entries.associate { it.value to it.key }
