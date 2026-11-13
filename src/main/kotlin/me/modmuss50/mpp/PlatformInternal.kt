@@ -136,6 +136,24 @@ data class GitlabPublishResult(
         get() = 0xFC6D26
 }
 
+@Serializable
+@SerialName("xyebbs")
+data class XyebbsPublishResult(
+    val projectId: String,
+    val data: String,
+    val code: Int,
+    val message: String,
+    override val title: String,
+) : PublishResult() {
+    override val type: String
+        get() = "xyebbs"
+    override val link: String
+        get() = "www.baidu.com"
+    override val brandColor: Int
+        get() = 0xF16436
+}
+
+
 @ApiStatus.Internal
 class PublishContext(private val queue: WorkQueue, private val result: RegularFile) {
     fun <T : PublishWorkParameters> submit(workActionClass: KClass<out PublishWorkAction<T>>, parameterAction: Action<in T>) {
