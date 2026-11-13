@@ -13,7 +13,8 @@ object XyebbsGameVersion {
         "26.1" to 633,
         "26.1.1" to 634,
         "26.1.2" to 635,
-
+        "26.2" to 646,
+        "26.3" to 652,
     )
 
     private val byId = byName.entries.associate { it.value to it.key }

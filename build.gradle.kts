@@ -76,7 +76,7 @@ gradlePlugin {
     testSourceSet(sourceSets["test"])
 
     plugins.create("mod-publish-plugin") {
-        id = "me.modmuss50.mod-publish-plugin"
+        id = "me.afk.mod-publish-plugin"
         implementationClass = "me.modmuss50.mpp.MppPlugin"
         displayName = "Mod Publish Plugin"
         description = project.description

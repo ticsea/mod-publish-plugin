@@ -74,6 +74,7 @@ class XyebbsApi(
     data class CustomLinkItemJson(
         @SerialName("linkType") val linkType: String,
         @SerialName("url") val url: String,
+        @SerialName("displayType") val displayType: String,
         @SerialName("info") val info: String,
         @SerialName("orderNum") val orderNum: Int,
     )
@@ -92,10 +93,10 @@ class XyebbsApi(
         val metadataJson = Json.encodeToString(metadata)
 
 
-        println("=== Sending JSON ===")
-        println(metadataJson)
-        println("Headers: $headers")
-        println("URL: $baseUrl/api/resources/$id/releases")
+//        println("=== Sending JSON ===")
+//        println(metadataJson)
+//        println("Headers: $headers")
+//        println("URL: $baseUrl/api/resources/$id/releases")
 
         val createVersionBranch: CreateVersionResponse = httpContext.post("$baseUrl/api/resources/${id}/releases", HttpRequest.BodyPublishers.ofString(metadataJson,
             Charsets.UTF_8), headers)
@@ -103,9 +104,9 @@ class XyebbsApi(
         val branchId = createVersionBranch.data?.id
             ?: throw Exception("创建版本失败: ${createVersionBranch.msg}")
 
-        println("=== Parsing Branch ID ===")
-        println("The ID IS: $branchId")
-        println("Create Branch Response: $createVersionBranch")
+//        println("=== Parsing Branch ID ===")
+//        println("The ID IS: $branchId")
+//        println("Create Branch Response: $createVersionBranch")
 
         return createVersionBranch
     }
@@ -175,8 +176,8 @@ class XyebbsApi(
         val bodyBuilder = MultipartBodyBuilder()
         for ((name, path) in files) {
             bodyBuilder.addFormDataPart(name, path.name, path, "application/java-archive")
-            println("==== Parsing BodyBuilder ====")
-            println("The name is $name")
+//            println("==== Parsing BodyBuilder ====")
+//            println("The name is $name")
         }
 
         val token: BaseResponseMsg<String> = httpContext.post("$baseUrl/api/resources/${resourceId}/releases/${branchId}/file/upload",
@@ -184,24 +185,24 @@ class XyebbsApi(
 
         val tokenAuth = token.data ?: throw IllegalArgumentException("获取不到token: ${token.data}")
 
-        println("=== Parsing TOKEN ===")
-        println("The TOKEN IS: $tokenAuth")
+//        println("=== Parsing TOKEN ===")
+//        println("The TOKEN IS: $tokenAuth")
 
         val multipartHeaders = headers.toMutableMap()
         multipartHeaders["Content-Type"] = bodyBuilder.getContentType()
 
-        println("=== Uploading with Content-Type: ${multipartHeaders["Content-Type"]} ===")
-        println("=== Headers: $multipartHeaders ===")
+//        println("=== Uploading with Content-Type: ${multipartHeaders["Content-Type"]} ===")
+//        println("=== Headers: $multipartHeaders ===")
 
         val uploadHeaders = mapOf(
             "Content-Type" to bodyBuilder.getContentType()
         )
 
-        println("=== New Header: $uploadHeaders")
+//        println("=== New Header: $uploadHeaders")
 
-        println("===== All Response ====")
-        println("Create Token Response: $token")
-        println("The Post Url: https://storage.xyebbs.com/client/file/upload?token=${tokenAuth}")
+//        println("===== All Response ====")
+//        println("Create Token Response: $token")
+//        println("The Post Url: https://storage.xyebbs.com/client/file/upload?token=${tokenAuth}")
 
         val post = httpContext.post<BaseResponseMsg<String>>(
             "https://storage.xyebbs.com/client/file/upload?token=${tokenAuth}",

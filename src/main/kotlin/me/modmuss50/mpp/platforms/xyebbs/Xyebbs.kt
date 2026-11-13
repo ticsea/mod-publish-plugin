@@ -96,11 +96,12 @@ interface LinkContainer {
     val objectFactory: ObjectFactory
 
     fun curseForgeLink(url: String) {
-        addInternal("CF", url, "CurseForge", 0)
+        // 可以在这里传入默认的 displayType，比如 "URL"
+        addInternal("CF", "URL", url, "CurseForge", 0)
     }
 
     fun modrinthLink(url: String) {
-        addInternal("MR", url, "Modrinth", 1)
+        addInternal("MR", "URL", url, "Modrinth", 1)
     }
 
     fun fromDependencies(other: LinkContainer) {
@@ -108,17 +109,17 @@ interface LinkContainer {
     }
 
     @Internal
-    fun addInternal(type: String, url: String, info: String, orderNum: Int) {
+    fun addInternal(type: String, displayType: String, url: String, info: String, orderNum: Int) {
         downLoadLinks.add(
             objectFactory.newInstance(Link::class.java).apply {
                 this.type.set(type)
+                this.displayType.set(displayType) // 关键：必须显式赋值
                 this.url.set(url)
                 this.info.set(info)
                 this.orderNum.set(orderNum)
             }
         )
     }
-
 }
 
 interface Link {
@@ -126,6 +127,8 @@ interface Link {
     @get:Input
     @get:Optional
     val url: Property<String>
+    @get:Input
+    val displayType: Property<String>
     @get:Input
     @get:Optional
     val info: Property<String>
@@ -143,8 +146,8 @@ constructor(
         val builder = objectFactory.newInstance(XyebbsApi.CustomLinkItem::class.java)
         action.execute(builder)
 
-        println("==== Parsing Link Item ====")
-        println(builder)
+//        println("==== Parsing Link Item ====")
+//        println(builder)
 
         customLink.add(builder)
     }*/
@@ -198,9 +201,9 @@ constructor(
                 val files = HashMap<String, Path>()
                 files[primaryFileKey] = file.path
 
-                println("==== Parsing File")
-                println("File path: ${file.path}")
-                println("File name: ${file.path.fileName}")
+//                println("==== Parsing File")
+//                println("File path: ${file.path}")
+//                println("File name: ${file.path.fileName}")
 
                 val storedLinks = downLoadLinks.get()
 
@@ -208,6 +211,7 @@ constructor(
                     XyebbsApi.CustomLinkItemJson(
                         linkType = it.type.get(),
                         url = it.url.get(),
+                        displayType = it.displayType.get(),
                         info = it.info.get(),
                         orderNum = it.orderNum.get()
                     )
@@ -225,16 +229,16 @@ constructor(
                         links = jsonLinks
                     )
 
-                println("=== Creating Version ===")
-                println("label: ${label.get()}")
-                println("type: ${environmentType.get()}")
-                println("channel: ${XyebbsApi.VersionType.valueOf(type.get())}")
-                println("orderNum: ${orderNumber.get()}")
-                println("versions: ${minecraftVersions.get()}")
-                println("versions (mapped): ${XyebbsGameVersion.versionsToIds(minecraftVersions.get())}")
-                println("cores: ${modLoaders.get()}")
-                println("cores (mapped): ${XyebbsLoader.loadersToId(modLoaders.get())}")
-                println("The url is: ${apiEndpoint.get()}/api/resources/${projectId.get()}/releases")
+//                println("=== Creating Version ===")
+//                println("label: ${label.get()}")
+//                println("type: ${environmentType.get()}")
+//                println("channel: ${XyebbsApi.VersionType.valueOf(type.get())}")
+//                println("orderNum: ${orderNumber.get()}")
+//                println("versions: ${minecraftVersions.get()}")
+//                println("versions (mapped): ${XyebbsGameVersion.versionsToIds(minecraftVersions.get())}")
+//                println("cores: ${modLoaders.get()}")
+//                println("cores (mapped): ${XyebbsLoader.loadersToId(modLoaders.get())}")
+//                println("The url is: ${apiEndpoint.get()}/api/resources/${projectId.get()}/releases")
 
                 val response =
                     Retry.run(maxRetries.get(), "Failed to create version") {
@@ -246,7 +250,7 @@ constructor(
                         api.upload(projectId.get(), response.data?.id, files)
                     }
 
-                println("The response is: $uploadResponse")
+//                println("The response is: $uploadResponse")
 
                 return XyebbsPublishResult(
                     projectId = projectId.get(),
